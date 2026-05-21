@@ -1,0 +1,31 @@
+# Build: docker build -f micronaut-app/Dockerfile.native -t cop/micronaut-books-native .
+# (build context must be the repo root — gradlew lives there)
+#
+# Result: ~50 MB distroless image, <100 ms startup, no JVM at runtime.
+#
+# Why zero configuration is needed:
+#   Micronaut annotation processors write every bean definition, HTTP route table,
+#   and JSON serializer into generated .class files at javac time.
+#   GraalVM static analysis sees only deterministic method calls — nothing to hint.
+#
+#   Spring Boot 3 also supports native image (AOT), but must register reflection hints
+#   for anything Spring discovers dynamically at runtime: component scan, Jackson subtypes,
+#   Hibernate proxies, third-party libraries. For complex apps this requires manual
+#   @ReflectionHint annotations or reflect-config.json entries.
+#   Micronaut never had runtime reflection to begin with.
+
+FROM ghcr.io/graalvm/native-image:ol9-java25 AS build
+
+WORKDIR /workspace
+
+COPY . .
+
+RUN ./gradlew :micronaut-app:nativeCompile -x test --no-daemon
+
+FROM gcr.io/distroless/cc-debian12
+
+COPY --from=build /workspace/micronaut-app/build/native/nativeCompile/micronaut-books /micronaut-books
+
+EXPOSE 8081
+
+ENTRYPOINT ["/micronaut-books"]

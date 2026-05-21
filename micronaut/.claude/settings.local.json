@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/usr/libexec/java_home -v 25)",
+      "Bash(JAVA_HOME=$\\(/usr/libexec/java_home -v 25\\) ./gradlew :spring-app:test :micronaut-app:test)"
+    ]
+  }
+}

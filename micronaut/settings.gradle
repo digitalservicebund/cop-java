@@ -1,0 +1,4 @@
+rootProject.name = 'cop-micronaut-demo'
+
+include 'spring-app'
+include 'micronaut-app'
